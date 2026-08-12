@@ -1,0 +1,41 @@
+{
+  "name": "markdown-editor",
+  "version": "0.1.0",
+  "description": "Windows-first Markdown editor built with Electron",
+  "main": "./out/main/index.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "npm run typecheck && electron-vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+    "test": "vitest run",
+    "preview": "electron-vite preview",
+    "dist": "npm run build && electron-builder --win",
+    "dist:dir": "npm run build && electron-builder --win --dir"
+  },
+  "dependencies": {
+    "@codemirror/lang-markdown": "latest",
+    "@codemirror/language-data": "latest",
+    "@uiw/react-codemirror": "latest",
+    "github-markdown-css": "latest",
+    "highlight.js": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-markdown": "latest",
+    "rehype-highlight": "latest",
+    "remark-gfm": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "@vitejs/plugin-react": "^5.1.4",
+    "electron": "latest",
+    "electron-builder": "latest",
+    "electron-vite": "^5.0.0",
+    "typescript": "latest",
+    "vite": "^7.3.6",
+    "vitest": "latest"
+  }
+}
+

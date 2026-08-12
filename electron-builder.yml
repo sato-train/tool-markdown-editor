@@ -1,0 +1,28 @@
+appId: com.local.markdown-editor
+productName: Markdown Editor
+directories:
+  output: dist
+files:
+  - out/**
+  - package.json
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+fileAssociations:
+  - ext: md
+    name: Markdown Document
+    description: Markdown File
+    mimeType: text/markdown
+    role: Editor
+  - ext: markdown
+    name: Markdown Document
+    description: Markdown File
+    mimeType: text/markdown
+    role: Editor

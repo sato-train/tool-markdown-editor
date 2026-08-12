@@ -1,0 +1,78 @@
+:root {
+  color: #1f2328;
+  background: #f6f8fa;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+
+button {
+  min-width: 72px;
+  padding: 7px 14px;
+  color: #1f2328;
+  background: #f6f8fa;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover { background: #eef1f4; }
+button.primary { color: #fff; background: #1f883d; border-color: #1f883d; }
+button.primary:hover { background: #1a7f37; }
+
+.app-shell { display: flex; flex-direction: column; height: 100vh; }
+.toolbar {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 8px 14px;
+  background: #fff;
+  border-bottom: 1px solid #d0d7de;
+}
+
+.brand { margin-right: 8px; font-size: 15px; font-weight: 700; white-space: nowrap; }
+.file-status {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  margin-left: auto;
+  color: #57606a;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dirty-dot { flex: 0 0 auto; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; }
+.dirty-dot.visible { background: #bf8700; }
+.error-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+  color: #82071e;
+  background: #ffebe9;
+  border-bottom: 1px solid #ff8182;
+  font-size: 13px;
+}
+
+.error-banner button { min-width: auto; padding: 0 6px; color: inherit; background: transparent; border: 0; font-size: 20px; }
+.workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); flex: 1; min-height: 0; }
+.pane { min-width: 0; height: 100%; overflow: auto; background: #fff; }
+.editor-pane { border-right: 1px solid #d0d7de; }
+.editor-pane .cm-editor { height: 100%; font-size: 14px; }
+.editor-pane .cm-scroller { overflow: auto; font-family: "Cascadia Code", Consolas, monospace; }
+.preview-pane.markdown-body { max-width: none; padding: 28px 32px 64px; }
+
+@media (max-width: 760px) {
+  .brand { display: none; }
+  .workspace { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); }
+  .editor-pane { border-right: 0; border-bottom: 1px solid #d0d7de; }
+}
