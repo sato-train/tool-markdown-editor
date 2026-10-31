@@ -20,7 +20,42 @@ function App(): React.JSX.Element {
   const [currentPath, setCurrentPath] = useState<string | null>(null)
   const [isDirty, setIsDirty] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [editorWidth, setEditorWidth] = useState<number | null>(null)
   const dirtyRef = useRef(isDirty)
+  const workspaceRef = useRef<HTMLElement>(null)
+
+  const setEditorWidthFromPosition = useCallback((clientX: number) => {
+    const workspace = workspaceRef.current
+    if (!workspace) return
+
+    const { left, width } = workspace.getBoundingClientRect()
+    const minimumPaneWidth = 240
+    const dividerWidth = 10
+    const maximumWidth = Math.max(minimumPaneWidth, width - minimumPaneWidth - dividerWidth)
+    setEditorWidth(Math.min(Math.max(clientX - left, minimumPaneWidth), maximumWidth))
+  }, [])
+
+  const handleDividerPointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    event.currentTarget.setPointerCapture(event.pointerId)
+    setEditorWidthFromPosition(event.clientX)
+  }, [setEditorWidthFromPosition])
+
+  const handleDividerPointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      setEditorWidthFromPosition(event.clientX)
+    }
+  }, [setEditorWidthFromPosition])
+
+  const handleDividerKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
+    const workspace = workspaceRef.current
+    if (!workspace) return
+
+    const currentWidth = editorWidth ?? workspace.getBoundingClientRect().width / 2
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      event.preventDefault()
+      setEditorWidthFromPosition(workspace.getBoundingClientRect().left + currentWidth + (event.key === 'ArrowLeft' ? -20 : 20))
+    }
+  }, [editorWidth, setEditorWidthFromPosition])
 
   useEffect(() => {
     dirtyRef.current = isDirty
@@ -123,7 +158,11 @@ function App(): React.JSX.Element {
         </div>
       )}
 
-      <section className="workspace">
+      <section
+        ref={workspaceRef}
+        className="workspace"
+        style={editorWidth === null ? undefined : { '--editor-pane-width': `${editorWidth}px` } as React.CSSProperties}
+      >
         <div className="pane editor-pane" aria-label="Markdownエディター">
           <CodeMirror
             value={value}
@@ -135,6 +174,18 @@ function App(): React.JSX.Element {
             }}
           />
         </div>
+        <div
+          className="pane-divider"
+          role="separator"
+          aria-label="エディターとプレビューの幅を調整"
+          aria-orientation="vertical"
+          tabIndex={0}
+          onPointerDown={handleDividerPointerDown}
+          onPointerMove={handleDividerPointerMove}
+          onPointerUp={(event) => event.currentTarget.releasePointerCapture(event.pointerId)}
+          onPointerCancel={(event) => event.currentTarget.releasePointerCapture(event.pointerId)}
+          onKeyDown={handleDividerKeyDown}
+        />
         <article className="pane preview-pane markdown-body" aria-label="Markdownプレビュー">
           <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
             {value}

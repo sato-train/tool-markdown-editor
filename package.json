@@ -1,6 +1,6 @@
 {
   "name": "markdown-editor",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Windows-first Markdown editor built with Electron",
   "main": "./out/main/index.js",
   "license": "MIT",
@@ -9,6 +9,7 @@
     "build": "npm run typecheck && electron-vite build",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "test": "vitest run",
+    "security:check": "npm audit --audit-level=high",
     "preview": "electron-vite preview",
     "dist": "npm run build && electron-builder --win",
     "dist:dir": "npm run build && electron-builder --win --dir"
