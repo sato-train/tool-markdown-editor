@@ -7,6 +7,7 @@ import rehypeHighlight from 'rehype-highlight'
 import remarkGfm from 'remark-gfm'
 
 const INITIAL_CONTENT = '# Markdown Editor\n\nMarkdownファイルを開くか、ここから書き始めてください。'
+const PANE_ORDER_STORAGE_KEY = 'markdown-editor.panes-reversed'
 
 type FileResult = {
   ok: boolean
@@ -15,14 +16,49 @@ type FileResult = {
   error?: string
 }
 
+function loadPaneOrder(): boolean {
+  try {
+    return window.localStorage.getItem(PANE_ORDER_STORAGE_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
+
 function App(): React.JSX.Element {
   const [value, setValue] = useState(INITIAL_CONTENT)
   const [currentPath, setCurrentPath] = useState<string | null>(null)
   const [isDirty, setIsDirty] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [editorWidth, setEditorWidth] = useState<number | null>(null)
+  const [isPaneOrderReversed, setIsPaneOrderReversed] = useState(loadPaneOrder)
   const dirtyRef = useRef(isDirty)
   const workspaceRef = useRef<HTMLElement>(null)
+
+  const togglePaneOrder = useCallback(() => {
+    const nextIsPaneOrderReversed = !isPaneOrderReversed
+    const workspace = workspaceRef.current
+    if (workspace) {
+      const { width } = workspace.getBoundingClientRect()
+      const minimumPaneWidth = 240
+      const dividerWidth = 10
+      const maximumWidth = Math.max(minimumPaneWidth, width - minimumPaneWidth - dividerWidth)
+
+      setEditorWidth((currentWidth) => {
+        // Keep the divider where it is.  Once the panes exchange columns, the
+        // editor occupies the opposite side, so its width must be the remainder.
+        const currentEditorWidth = currentWidth ?? width / 2
+        const nextWidth = width - dividerWidth - currentEditorWidth
+        return Math.min(Math.max(nextWidth, minimumPaneWidth), maximumWidth)
+      })
+    }
+
+    setIsPaneOrderReversed(nextIsPaneOrderReversed)
+    try {
+      window.localStorage.setItem(PANE_ORDER_STORAGE_KEY, String(nextIsPaneOrderReversed))
+    } catch {
+      // The current session remains usable even when settings cannot be saved.
+    }
+  }, [isPaneOrderReversed])
 
   const setEditorWidthFromPosition = useCallback((clientX: number) => {
     const workspace = workspaceRef.current
@@ -32,8 +68,10 @@ function App(): React.JSX.Element {
     const minimumPaneWidth = 240
     const dividerWidth = 10
     const maximumWidth = Math.max(minimumPaneWidth, width - minimumPaneWidth - dividerWidth)
-    setEditorWidth(Math.min(Math.max(clientX - left, minimumPaneWidth), maximumWidth))
-  }, [])
+    const pointerOffset = clientX - left
+    const nextWidth = isPaneOrderReversed ? width - pointerOffset - dividerWidth : pointerOffset
+    setEditorWidth(Math.min(Math.max(nextWidth, minimumPaneWidth), maximumWidth))
+  }, [isPaneOrderReversed])
 
   const handleDividerPointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     event.currentTarget.setPointerCapture(event.pointerId)
@@ -53,9 +91,14 @@ function App(): React.JSX.Element {
     const currentWidth = editorWidth ?? workspace.getBoundingClientRect().width / 2
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
       event.preventDefault()
-      setEditorWidthFromPosition(workspace.getBoundingClientRect().left + currentWidth + (event.key === 'ArrowLeft' ? -20 : 20))
+      const { left, width } = workspace.getBoundingClientRect()
+      const dividerWidth = 10
+      const dividerPosition = isPaneOrderReversed
+        ? width - dividerWidth - currentWidth
+        : currentWidth
+      setEditorWidthFromPosition(left + dividerPosition + (event.key === 'ArrowLeft' ? -20 : 20))
     }
-  }, [editorWidth, setEditorWidthFromPosition])
+  }, [editorWidth, isPaneOrderReversed, setEditorWidthFromPosition])
 
   useEffect(() => {
     dirtyRef.current = isDirty
@@ -145,6 +188,14 @@ function App(): React.JSX.Element {
         <div className="brand">Markdown Editor</div>
         <button type="button" onClick={() => void handleOpen()} title="Ctrl+O">開く</button>
         <button type="button" className="primary" onClick={() => void handleSave()} title="Ctrl+S">保存</button>
+        <button
+          type="button"
+          onClick={togglePaneOrder}
+          aria-pressed={isPaneOrderReversed}
+          title="編集欄とプレビュー欄の位置を入れ替え"
+        >
+          左右を入れ替え
+        </button>
         <div className="file-status" title={currentPath ?? '未保存'}>
           <span className={isDirty ? 'dirty-dot visible' : 'dirty-dot'} />
           {currentPath ?? '未保存'}
@@ -160,7 +211,7 @@ function App(): React.JSX.Element {
 
       <section
         ref={workspaceRef}
-        className="workspace"
+        className={isPaneOrderReversed ? 'workspace panes-swapped' : 'workspace'}
         style={editorWidth === null ? undefined : { '--editor-pane-width': `${editorWidth}px` } as React.CSSProperties}
       >
         <div className="pane editor-pane" aria-label="Markdownエディター">
